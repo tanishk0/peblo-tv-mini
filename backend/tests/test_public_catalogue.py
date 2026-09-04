@@ -106,7 +106,9 @@ def test_search_matches_show_episode_and_category_case_insensitively(public_clie
 def test_search_filters_are_composable_and_trim_language_variants(public_client):
     client, storage = public_client
     publish_snapshot(storage)
-    response = client.get("/api/v1/catalog/search", params={"category": "ADVENTURE", "language": "hi", "section": "FEATURED"})
+    response = client.get("/api/v1/catalog/search", params={
+        "q": "adventure", "category": "ADVENTURE", "language": "hi", "section": "FEATURED",
+    })
     assert response.status_code == 200
     body = response.json()
     assert body["total_shows"] == body["total_entries"] == 1

@@ -1,4 +1,5 @@
 import pytest
+import json
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -153,6 +154,30 @@ def test_admin_only_and_successful_publish_is_idempotent(publish_client):
     db = Session()
     assert [run.status for run in db.query(PublishRun).order_by(PublishRun.id)] == [PublishRunStatus.SUCCESS, PublishRunStatus.SUCCESS]
     db.close()
+
+
+def test_successful_publish_atomically_switches_to_a_new_complete_snapshot(publish_client):
+    client, Session, storage = publish_client
+    db = Session()
+    show_id = seed_publishable_data(db)
+    db.close()
+    first = client.post("/api/v1/admin/catalog/publish", headers=headers(client))
+    assert first.status_code == 201
+    first_version = first.json()["catalogue_version"]
+    previous_file = storage.root / f"catalogue_{first_version}.json"
+    previous_snapshot = json.loads(previous_file.read_text(encoding="utf-8"))
+
+    db = Session()
+    db.get(Show, show_id).title = "New live title"
+    db.commit()
+    db.close()
+    second = client.post("/api/v1/admin/catalog/publish", headers=headers(client))
+
+    assert second.status_code == 201
+    assert second.json()["catalogue_version"] != first_version
+    assert storage.read_current()["sections"][0]["shows"][0]["title"] == "New live title"
+    # The earlier immutable version remains complete; only current.json changed.
+    assert json.loads(previous_file.read_text(encoding="utf-8")) == previous_snapshot
 
 
 def test_failed_switch_preserves_previous_complete_catalogue_and_records_failure(publish_client):

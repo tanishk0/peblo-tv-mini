@@ -86,6 +86,17 @@ def test_uploads_each_valid_artwork_type(artwork_client, artwork_type, dimension
     assert (provider.root / result["storage_key"]).is_file()
 
 
+def test_artwork_upload_requires_authenticated_cms_user(artwork_client):
+    client, _, _ = artwork_client
+    response = client.post(
+        "/api/v1/episodes/not-an-episode/artwork",
+        data={"artwork_type": "poster"},
+        files={"file": ("poster.png", image_bytes(600, 900), "image/png")},
+    )
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Not authenticated"
+
+
 def test_rejects_large_or_invalid_images_with_editor_friendly_errors(artwork_client):
     client, _, _ = artwork_client
     headers = auth_headers(client)
