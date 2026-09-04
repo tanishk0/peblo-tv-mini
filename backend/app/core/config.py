@@ -1,4 +1,5 @@
 from functools import lru_cache
+from pathlib import Path
 from typing import List, Optional, Union
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -40,6 +41,26 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = "postgres"
     POSTGRES_DB: str = "peblo_tv_mini"
     DATABASE_URL: Optional[str] = None
+
+    # Local development storage. A future object-storage provider can use the
+    # same StorageProvider interface without changing CMS upload logic.
+    LOCAL_ARTWORK_STORAGE_DIR: str = "storage/artwork"
+    LOCAL_ARTWORK_URL_PREFIX: str = "/media/artwork"
+    LOCAL_CATALOGUE_STORAGE_DIR: str = "storage/catalogues"
+
+    @property
+    def local_artwork_storage_path(self) -> Path:
+        path = Path(self.LOCAL_ARTWORK_STORAGE_DIR)
+        if path.is_absolute():
+            return path
+        return Path(__file__).resolve().parents[2] / path
+
+    @property
+    def local_catalogue_storage_path(self) -> Path:
+        path = Path(self.LOCAL_CATALOGUE_STORAGE_DIR)
+        if path.is_absolute():
+            return path
+        return Path(__file__).resolve().parents[2] / path
 
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:

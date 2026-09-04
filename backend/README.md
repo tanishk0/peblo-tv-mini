@@ -129,3 +129,13 @@ The internal CMS API enforces role-based access control via JWT Bearer tokens:
   - `require_admin`: Accepts only `admin` (editors receive `403 Forbidden`).
   - Unauthenticated requests receive `401 Unauthorized`.
 
+## Public catalogue API
+
+`GET /api/v1/catalog` and `GET /api/v1/catalog/search` read only the atomically
+published JSON snapshot; they do not query CMS tables. Search is a
+case-insensitive in-memory scan of that snapshot and supports composable `q`,
+`category`, `language`, and `section` filters. This is suitable for a
+take-home-sized catalogue (roughly up to tens of thousands of entries per
+process). At materially larger scale, move the snapshot into a cached indexed
+read model (for example PostgreSQL full-text search or a managed search index)
+while retaining the published snapshot as the source of truth.

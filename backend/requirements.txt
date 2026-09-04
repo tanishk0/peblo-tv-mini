@@ -8,6 +8,8 @@ pydantic-settings>=2.2.0
 python-dotenv>=1.0.0
 pyjwt>=2.8.0
 bcrypt>=4.1.0
+Pillow>=10.0.0
+python-multipart>=0.0.9
 
 # Testing
 pytest>=8.0.0

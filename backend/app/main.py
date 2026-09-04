@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 from app.api.v1.api import api_router
 from app.core.config import settings
@@ -9,6 +10,15 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     docs_url="/docs",
     redoc_url="/redoc",
+)
+
+# Local CMS artwork preview URLs. Storage implementation remains behind the
+# StorageProvider abstraction, so R2 can replace this in a later phase.
+settings.local_artwork_storage_path.mkdir(parents=True, exist_ok=True)
+app.mount(
+    settings.LOCAL_ARTWORK_URL_PREFIX,
+    StaticFiles(directory=str(settings.local_artwork_storage_path)),
+    name="cms-artwork",
 )
 
 # CORS middleware configuration
