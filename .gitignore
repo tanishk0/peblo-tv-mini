@@ -4,6 +4,7 @@
 node_modules/
 cms/dist/
 viewer/dist/
+backend/storage/
 __pycache__/
 *.py[cod]
 .venv/
