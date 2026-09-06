@@ -1,4 +1,4 @@
-import type { Artwork, Episode, Page, PublishResult, Season, Show, TokenResponse, User, ValidationReport } from './types'
+import type { Artwork, Episode, Page, PublishResult, PublishRun, Season, Show, TokenResponse, User, ValidationReport } from './types'
 
 const baseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api/v1'
 const tokenKey = 'peblo.cms.token'
@@ -40,5 +40,6 @@ export const api = {
   deleteEpisode: (id: string) => request<void>(`/episodes/${id}`, { method: 'DELETE' }),
   uploadArtwork: (episodeId: string, artwork_type: string, file: File) => { const data = new FormData(); data.set('artwork_type', artwork_type); data.set('file', file); return request<Artwork>(`/episodes/${episodeId}/artwork`, { method: 'POST', body: data }) },
   validationReport: () => request<ValidationReport>('/admin/validation-report'),
+  publishRuns: () => request<PublishRun[]>('/admin/publish-runs'),
   publish: () => request<PublishResult>('/admin/catalog/publish', { method: 'POST' }),
 }

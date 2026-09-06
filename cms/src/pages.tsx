@@ -32,6 +32,21 @@ export function ShowListPage() {
   return <><PageTitle title="Shows"><Link className="button" to="/shows/new">Create show</Link></PageTitle><p className="muted">Filters apply to this server-paginated page; the current API does not expose show search/filter parameters.</p><div className="filters"><input placeholder="Search this page" value={search} onChange={e => setSearch(e.target.value)} /><select value={section} onChange={e => setSection(e.target.value)}><option value="">All sections</option>{sections.map(item => <option key={item}>{item}</option>)}</select><select value={status} onChange={e => setStatus(e.target.value)}><option value="">All statuses</option>{statuses.map(item => <option key={item}>{item}</option>)}</select></div>{filtered.length === 0 ? <p className="state">No shows match this page.</p> : <table><thead><tr><th>Title</th><th>Section</th><th>Status</th><th /></tr></thead><tbody>{filtered.map(show => <tr key={show.id}><td><Link to={`/shows/${show.id}`}>{show.title}</Link><small>{show.slug}</small></td><td>{show.section ?? '—'}</td><td><span className={`pill ${show.status}`}>{show.status}</span></td><td><Link to={`/shows/${show.id}/edit`}>Edit</Link></td></tr>)}</tbody></table>}<div className="pager"><button disabled={offset === 0} onClick={() => setOffset(Math.max(0, offset - page.limit))}>Previous</button><span>{offset + 1}–{Math.min(offset + page.limit, page.total)} of {page.total}</span><button disabled={offset + page.limit >= page.total} onClick={() => setOffset(offset + page.limit)}>Next</button></div></>
 }
 
+export function EpisodeListPage() {
+  const [search, setSearch] = useState('')
+  const [status, setStatus] = useState('')
+  const query = useQuery({ queryKey: ['episodes'], queryFn: () => api.episodes() })
+  const episodes = useMemo(() => (query.data?.items ?? []).filter(episode =>
+    (!search || `${episode.title} ${episode.language} ${episode.content_group}`.toLowerCase().includes(search.toLowerCase())) &&
+    (!status || episode.status === status)
+  ), [query.data, search, status])
+
+  if (query.isLoading) return <Loading />
+  if (query.error) return <ErrorState error={query.error} retry={() => query.refetch()} />
+
+  return <><PageTitle title="Episodes" /><div className="filters"><input placeholder="Search episodes" value={search} onChange={e => setSearch(e.target.value)} /><select value={status} onChange={e => setStatus(e.target.value)}><option value="">All statuses</option>{statuses.map(item => <option key={item}>{item}</option>)}</select></div>{episodes.length === 0 ? <p className="state">No episodes match.</p> : <table><thead><tr><th>Title</th><th>Language</th><th>Status</th><th>Show</th></tr></thead><tbody>{episodes.map(episode => <tr key={episode.id}><td>{episode.title}<small>S{episode.season_id} · E{episode.episode_number}</small></td><td>{episode.language}</td><td><span className={`pill ${episode.status}`}>{episode.status}</span></td><td><Link to={`/shows/${episode.show_id}`}>View show</Link></td></tr>)}</tbody></table>}</>
+}
+
 type ShowForm = { title: string; slug: string; synopsis: string; section: string; categories: string[]; status: Status }
 const blankShow: ShowForm = { title: '', slug: '', synopsis: '', section: '', categories: [], status: 'draft' }
 export function ShowFormPage() {

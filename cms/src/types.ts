@@ -8,6 +8,7 @@ export interface Season { id: number; show_id: number; season_number: number; cr
 export interface Episode { id: string; show_id: number; season_id: number; episode_number: number; title: string; synopsis: string | null; duration_seconds: number | null; language: string; content_group: string; status: Status; artwork_types: ArtworkType[]; created_at: string; updated_at: string }
 export interface Page<T> { items: T[]; total: number; offset: number; limit: number }
 export interface Artwork { id: number; episode_id: string; type: ArtworkType; storage_key: string; url: string; width: number; height: number; file_size_bytes: number; created_at: string }
-export interface Issue { field: string; message: string }
-export interface ValidationReport { can_publish: boolean; total_issues: number; shows: { show_id: number; show_title: string; issues: Issue[]; episodes: { episode_id: string; episode_title: string; issues: Issue[] }[] }[] }
+export interface Issue { field: string; message: string; action: 'editor' | 'engineering' }
+export interface ValidationReport { can_publish: boolean; total_issues: number; shows: { show_id: number; show_title: string; issues: Issue[]; episodes: { episode_id: string; episode_title: string; issues: Issue[] }[] }[]; data_quality_issues: { show_id: number | null; show_title: string; episode_id: string; episode_title: string; message: string; action: 'engineering' }[] }
 export interface PublishResult { status: string; publish_run_id: number; catalogue_version: string; show_count: number; episode_count: number; completed_at: string }
+export interface PublishRun { id: number; status: string; show_count: number; episode_count: number; error_message: string | null; catalogue_version: string | null; started_at: string; completed_at: string | null }
