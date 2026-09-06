@@ -78,7 +78,7 @@ def test_admin_gets_clean_report_for_a_valid_published_dataset(validation_client
 
     response = client.get("/api/v1/admin/validation-report", headers=headers(client))
     assert response.status_code == 200
-    assert response.json() == {"can_publish": True, "total_issues": 0, "shows": []}
+    assert response.json() == {"can_publish": True, "total_issues": 0, "shows": [], "data_quality_issues": []}
 
 
 def test_report_groups_all_show_and_episode_problems(validation_client):

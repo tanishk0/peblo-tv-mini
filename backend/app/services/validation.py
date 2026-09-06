@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.models.episode import Episode
 from app.models.season import Season
+from app.models.seed_import_issue import SeedImportIssue
 from app.models.show import Show
 from app.services.publish_validation import episode_publish_issues, show_publish_issues
 
@@ -26,6 +27,7 @@ class ValidationService:
         )
         grouped: OrderedDict[int, dict] = OrderedDict()
         known_shows = {show.id: show for show in shows}
+        shows_by_slug = {show.slug: show for show in shows}
 
         def group_for(show_id: int) -> dict:
             if show_id not in grouped:
@@ -52,6 +54,23 @@ class ValidationService:
                     "issues": issues,
                 })
 
+        data_quality_issues = []
+        for issue in self.db.query(SeedImportIssue).order_by(SeedImportIssue.id).all():
+            show = shows_by_slug.get(issue.show_slug)
+            data_quality_issues.append({
+                "show_id": show.id if show else None,
+                "show_title": show.title if show else "Unknown show",
+                "episode_id": issue.source_episode_id,
+                "episode_title": "Duplicate episode version",
+                "message": issue.message,
+                "action": "engineering",
+            })
+
         report_shows = list(grouped.values())
         total_issues = sum(len(show["issues"]) + sum(len(episode["issues"]) for episode in show["episodes"]) for show in report_shows)
-        return {"can_publish": total_issues == 0, "total_issues": total_issues, "shows": report_shows}
+        return {
+            "can_publish": total_issues == 0,
+            "total_issues": total_issues,
+            "shows": report_shows,
+            "data_quality_issues": data_quality_issues,
+        }

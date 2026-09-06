@@ -115,7 +115,7 @@ def test_rejects_large_or_invalid_images_with_editor_friendly_errors(artwork_cli
 
     invalid_type = client.post(f"/api/v1/episodes/{episode}/artwork", headers=headers, data={"artwork_type": "avatar"}, files={"file": ("image.png", image_bytes(600, 900), "image/png")})
     assert invalid_type.status_code == 422
-    assert "Artwork type" in invalid_type.json()["detail"]
+    assert invalid_type.json()["detail"] == "Choose poster, banner, or thumbnail artwork."
 
 
 def test_duplicate_type_is_rejected_without_creating_another_file(artwork_client):

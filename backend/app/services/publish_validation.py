@@ -17,16 +17,16 @@ def show_publish_issues(show: Show) -> list[dict[str, str]]:
 
     issues: list[dict[str, str]] = []
     if not show.section:
-        issues.append({"field": "section", "message": "Published show requires a section."})
+        issues.append({"field": "section", "message": "Choose a section for this show before publishing.", "action": "editor"})
     elif show.section not in allowed_sections():
-        issues.append({"field": "section", "message": f"Section '{show.section}' is not allowed for published shows."})
+        issues.append({"field": "section", "message": "This show is assigned to a section that is no longer available. Choose one of the available sections.", "action": "editor"})
 
     if not isinstance(show.categories, list):
-        issues.append({"field": "categories", "message": "Categories must be a list of approved categories."})
+        issues.append({"field": "categories", "message": "Choose categories from the approved list before publishing.", "action": "editor"})
     else:
         invalid = sorted({str(category) for category in show.categories if not isinstance(category, str) or category not in allowed_categories()})
         if invalid:
-            issues.append({"field": "categories", "message": "Invalid categories: " + ", ".join(invalid) + "."})
+            issues.append({"field": "categories", "message": "Remove or replace these unavailable categories: " + ", ".join(invalid) + ".", "action": "editor"})
     return issues
 
 
@@ -37,17 +37,17 @@ def episode_publish_issues(episode: Episode, season: Season | None = None) -> li
 
     issues: list[dict[str, str]] = []
     if not episode.duration_seconds or episode.duration_seconds <= 0:
-        issues.append({"field": "duration_seconds", "message": "Published episode requires a duration."})
+        issues.append({"field": "duration_seconds", "message": "Add a running time before publishing this episode.", "action": "editor"})
     if episode.language not in allowed_languages():
-        issues.append({"field": "language", "message": f"Language '{episode.language}' is not supported."})
+        issues.append({"field": "language", "message": "Choose English or Hindi as the episode language before publishing.", "action": "editor"})
 
     present = {artwork.type.value if hasattr(artwork.type, "value") else artwork.type for artwork in episode.artworks}
     missing = sorted(required_artwork_types() - present)
     if missing:
-        issues.append({"field": "artwork", "message": "Published episode requires artwork: " + ", ".join(missing) + "."})
+        issues.append({"field": "artwork", "message": "Add the missing artwork before publishing: " + ", ".join(item.capitalize() for item in missing) + ".", "action": "editor"})
 
     if season is None:
-        issues.append({"field": "season_id", "message": "Episode references a season that no longer exists."})
+        issues.append({"field": "season", "message": "Choose a valid season for this episode before publishing.", "action": "editor"})
     elif season.show_id != episode.show_id:
-        issues.append({"field": "season_id", "message": "Episode season belongs to a different show."})
+        issues.append({"field": "season", "message": "Move this episode to a season belonging to this show before publishing.", "action": "editor"})
     return issues

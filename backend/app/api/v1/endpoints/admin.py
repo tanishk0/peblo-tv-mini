@@ -10,7 +10,7 @@ from app.api.deps import get_db, require_admin
 from app.models.enums import PublishRunStatus
 from app.models.publish_run import PublishRun
 from app.models.user import User
-from app.schemas.catalogue import PublishCatalogueResponse
+from app.schemas.catalogue import PublishCatalogueResponse, PublishRunResponse
 from app.schemas.validation import ValidationReport
 from app.services.catalogue import CatalogueBuilder
 from app.services.catalogue_storage import CatalogueStorageProvider, LocalCatalogueStorageProvider
@@ -32,6 +32,21 @@ def validation_report(
 ) -> ValidationReport:
     """Return every current blocker that prevents a safe catalogue publish."""
     return ValidationReport.model_validate(ValidationService(db).report())
+
+
+@router.get("/publish-runs", response_model=list[PublishRunResponse])
+def list_publish_runs(
+    limit: int = 20,
+    db: Session = Depends(get_db),
+    _=Depends(require_admin),
+) -> list[PublishRun]:
+    """Return recent publish attempts so operators can see outcomes and versions."""
+    return (
+        db.query(PublishRun)
+        .order_by(PublishRun.id.desc())
+        .limit(min(max(limit, 1), 100))
+        .all()
+    )
 
 
 @router.post("/catalog/publish", response_model=PublishCatalogueResponse, status_code=status.HTTP_201_CREATED)

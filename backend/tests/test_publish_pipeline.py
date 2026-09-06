@@ -156,6 +156,20 @@ def test_admin_only_and_successful_publish_is_idempotent(publish_client):
     db.close()
 
 
+def test_publish_run_history_is_admin_only_and_newest_first(publish_client):
+    client, Session, _ = publish_client
+    db = Session()
+    seed_publishable_data(db)
+    db.close()
+    assert client.get("/api/v1/admin/publish-runs").status_code == 401
+    assert client.get("/api/v1/admin/publish-runs", headers=headers(client, "editor@peblo.tv", "editor123")).status_code == 403
+    assert client.post("/api/v1/admin/catalog/publish", headers=headers(client)).status_code == 201
+    response = client.get("/api/v1/admin/publish-runs", headers=headers(client))
+    assert response.status_code == 200
+    assert response.json()[0]["status"] == "success"
+    assert response.json()[0]["catalogue_version"].startswith("v-")
+
+
 def test_successful_publish_atomically_switches_to_a_new_complete_snapshot(publish_client):
     client, Session, storage = publish_client
     db = Session()

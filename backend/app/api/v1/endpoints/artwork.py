@@ -27,8 +27,7 @@ def get_storage_provider() -> StorageProvider:
 def artwork_spec(artwork_type: str) -> dict:
     spec = reference_data()["artwork_specs"].get(artwork_type)
     if not spec:
-        choices = ", ".join(sorted(reference_data()["artwork_specs"]))
-        raise HTTPException(422, detail=f"Artwork type must be one of: {choices}.")
+        raise HTTPException(422, detail="Choose poster, banner, or thumbnail artwork.")
     return spec
 
 
@@ -39,21 +38,20 @@ def inspect_image(content: bytes, artwork_type: str, spec: dict) -> tuple[int, i
         width, height = image.size
         image_format = image.format or "image"
     except (UnidentifiedImageError, OSError, ValueError):
-        raise HTTPException(422, detail="Please upload a valid image file.")
+        raise HTTPException(422, detail="Choose a valid image file and try again.")
 
     expected_width, expected_height = spec["target_px"]
-    label = artwork_type.capitalize()
     uploaded = f"{width}\u00d7{height}"
     if width * expected_height != height * expected_width:
         raise HTTPException(
             422,
-            detail=(f"{label} must be {expected_width}\u00d7{expected_height} ({spec['aspect']}). "
-                    f"Uploaded image is {uploaded}."),
+            detail=(f"Use a {expected_width}\u00d7{expected_height} ({spec['aspect']}) {artwork_type}. "
+                    f"The selected image is {uploaded}."),
         )
     if (width, height) != (expected_width, expected_height):
         raise HTTPException(
             422,
-            detail=f"{label} must be {expected_width}\u00d7{expected_height}. Uploaded image is {uploaded}.",
+            detail=f"Use a {expected_width}\u00d7{expected_height} {artwork_type}. The selected image is {uploaded}.",
         )
     return width, height, image_format
 
@@ -88,20 +86,20 @@ async def upload_artwork(
     max_bytes = int(spec["max_kb"]) * 1024
     content = await file.read(max_bytes + 1)
     if len(content) > max_bytes:
-        raise HTTPException(422, detail=f"{artwork_type.capitalize()} must be no larger than {spec['max_kb']} KB.")
+        raise HTTPException(422, detail=f"Choose a {artwork_type} image smaller than {spec['max_kb']} KB.")
     if not content:
-        raise HTTPException(422, detail="Please choose an image file to upload.")
+        raise HTTPException(422, detail="Choose an image file to upload.")
 
     width, height, file_format = inspect_image(content, artwork_type, spec)
     artwork_enum = ArtworkType(artwork_type)
     if db.query(Artwork).filter(Artwork.episode_id == episode_id, Artwork.type == artwork_enum).first():
-        raise HTTPException(409, detail=f"This episode already has {artwork_type} artwork. Replace or remove it before uploading another.")
+        raise HTTPException(409, detail=f"This episode already has {artwork_type} artwork. Replacing existing artwork needs engineering support.")
 
     storage_key = f"episodes/{episode_id}/{artwork_type}-{uuid4().hex}.{image_extension(file_format)}"
     try:
         saved_key = storage.save(content, storage_key)
     except (OSError, ValueError):
-        raise HTTPException(500, detail="Artwork could not be saved. Please try again.")
+        raise HTTPException(500, detail="We could not save this artwork. Please try again, or contact engineering if the problem continues.")
 
     artwork = Artwork(
         episode_id=episode_id,
@@ -118,11 +116,11 @@ async def upload_artwork(
     except IntegrityError:
         db.rollback()
         remove_stored_file(storage, saved_key)
-        raise HTTPException(409, detail=f"This episode already has {artwork_type} artwork. Replace or remove it before uploading another.")
+        raise HTTPException(409, detail=f"This episode already has {artwork_type} artwork. Replacing existing artwork needs engineering support.")
     except SQLAlchemyError:
         db.rollback()
         remove_stored_file(storage, saved_key)
-        raise HTTPException(500, detail="Artwork details could not be saved. Please try again.")
+        raise HTTPException(500, detail="We could not save this artwork. Please try again, or contact engineering if the problem continues.")
 
     return ArtworkResponse(
         id=artwork.id,
