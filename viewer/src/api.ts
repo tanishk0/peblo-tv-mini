@@ -2,6 +2,14 @@ import type { Catalogue } from './types'
 
 const baseUrl = import.meta.env.VITE_CATALOGUE_API_URL ?? 'http://localhost:8000/api/v1'
 export class CatalogueError extends Error { constructor(public status: number, message: string) { super(message) } }
+
+// Local storage returns a root-relative path (for example /media/artwork/...).
+// The Viewer is served from a different origin, so resolve it against the API
+// configured for the catalogue rather than against the Viewer page URL.
+export function resolveArtworkUrl(url: string): string {
+  return new URL(url, baseUrl).toString()
+}
+
 async function get<T>(path: string): Promise<T> {
   let response: Response
   try { response = await fetch(`${baseUrl}${path}`) } catch { throw new CatalogueError(0, 'We could not reach Peblo TV. Please try again.') }

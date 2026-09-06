@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { resolveArtworkUrl } from './api'
 import type { EpisodeEntry, Show } from './types'
 
 export function Loading() { return <div className="state"><div className="skeleton title"/><div className="skeleton row"/></div> }
 export function ErrorState({ error, retry }: { error: unknown; retry: () => void }) { return <div className="state"><h2>Something went wrong</h2><p>{error instanceof Error ? error.message : 'The catalogue could not be loaded.'}</p><button onClick={retry}>Try again</button></div> }
 export function EmptyState() { return <div className="state"><h2>No matching content</h2><p>No content matches your current search and filters.</p></div> }
-export function ArtworkImage({ artwork, alt, kind }: { artwork?: { url: string }; alt: string; kind: 'banner'|'poster'|'thumbnail' }) { const [failed, setFailed] = useState(false); const [loaded, setLoaded] = useState(false); return <div className={`art ${kind} ${loaded ? 'loaded' : ''} ${failed ? 'failed' : ''}`}>{!failed && artwork?.url && <img src={artwork.url} alt={alt} onLoad={() => setLoaded(true)} onError={() => setFailed(true)} />}{(!artwork?.url || failed) && <span>{kind === 'banner' ? 'Peblo TV' : 'No image'}</span>}</div> }
+export function ArtworkImage({ artwork, alt, kind }: { artwork?: { url: string }; alt: string; kind: 'banner'|'poster'|'thumbnail' }) { const [failed, setFailed] = useState(false); const [loaded, setLoaded] = useState(false); const src = artwork?.url ? resolveArtworkUrl(artwork.url) : undefined; return <div className={`art ${kind} ${loaded ? 'loaded' : ''} ${failed ? 'failed' : ''}`}>{!failed && src && <img src={src} alt={alt} onLoad={() => setLoaded(true)} onError={() => setFailed(true)} />}{(!src || failed) && <span>{kind === 'banner' ? 'Peblo TV' : 'No image'}</span>}</div> }
 export function posterFor(show: Show) { return show.seasons.flatMap(season => season.episodes).flatMap(entry => entry.languages).map(variant => variant.artwork.poster).find(Boolean) }
 export function bannerFor(show: Show) { return show.seasons.flatMap(season => season.episodes).flatMap(entry => entry.languages).map(variant => variant.artwork.banner).find(Boolean) }
 export function PosterCard({ show }: { show: Show }) { return <Link className="poster-card" to={`/shows/${show.slug}`}><ArtworkImage artwork={posterFor(show)} kind="poster" alt={`${show.title} poster`} /><b>{show.title}</b><small>{show.categories.join(' · ')}</small></Link> }

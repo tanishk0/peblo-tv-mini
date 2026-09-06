@@ -19,9 +19,13 @@ jobs:
         working-directory: cms
       - run: npm run lint
         working-directory: cms
+      - run: npm run build
+        working-directory: cms
       - run: npm ci
         working-directory: viewer
       - run: npm run lint
+        working-directory: viewer
+      - run: npm run build
         working-directory: viewer
 
   tests:
@@ -41,3 +45,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: docker compose build
+
+  deployment-plan:
+    runs-on: ubuntu-latest
+    needs: docker-build
+    steps:
+      - name: Document production deployment hand-off
+        run: |
+          echo "No cloud deployment is performed by this assessment repository."
+          echo "A production workflow would authenticate with the target registry using CI secrets, push the images built above, then deploy immutable image digests after a health check."
+          echo "Runtime secrets belong in the deployment platform's secret manager, never in this repository or image."
