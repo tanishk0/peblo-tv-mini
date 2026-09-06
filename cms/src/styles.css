@@ -4,3 +4,11 @@
 .validation-message { margin: .45rem 0; padding: .65rem .75rem; border-radius: .35rem; line-height: 1.45; }
 .validation-message.editor { background: #fff7ed; border-left: 3px solid #f97316; color: #9a3412; }
 .validation-message.engineering { background: #eff6ff; border-left: 3px solid #2563eb; color: #1e3a8a; }
+.lifecycle-banner { grid-column: 1 / -1; padding: 1rem 1.1rem; border: 1px solid; border-radius: .45rem; }
+.lifecycle-banner b { display: block; font-size: 1.05rem; }
+.lifecycle-banner p { margin: .35rem 0 .65rem; line-height: 1.45; }
+.lifecycle-banner strong { font-size: .9rem; }
+.lifecycle-banner ul { margin: .45rem 0 0; padding-left: 1.25rem; }
+.lifecycle-banner li + li { margin-top: .2rem; }
+.lifecycle-banner.draft { background: #fffbeb; border-color: #fcd34d; color: #78350f; }
+.lifecycle-banner.ready { background: #f0fdf4; border-color: #86efac; color: #166534; }

@@ -49,7 +49,7 @@ def create_show(client, auth):
     return client.post("/api/v1/shows", headers=auth, json={"title": "Moti", "slug": "moti", "categories": ["adventure"]})
 
 
-def test_content_crud_is_editor_authorized_and_paginated(cms_client):
+def test_editors_cannot_delete_content_and_admins_can(cms_client):
     client, _ = cms_client
     assert client.get("/api/v1/shows").status_code == 401
     auth = headers(client)
@@ -67,7 +67,13 @@ def test_content_crud_is_editor_authorized_and_paginated(cms_client):
     })
     assert episode.status_code == 201
     assert client.get("/api/v1/episodes?show_id=" + str(show_id), headers=auth).json()["total"] == 1
-    assert client.delete("/api/v1/episodes/ep-moti-1", headers=auth).status_code == 204
+    assert client.delete("/api/v1/episodes/ep-moti-1", headers=auth).status_code == 403
+    admin_auth = headers(client, "admin@peblo.tv", "admin123")
+    assert client.delete("/api/v1/episodes/ep-moti-1", headers=admin_auth).status_code == 204
+    assert client.delete(f"/api/v1/seasons/{season_id}", headers=auth).status_code == 403
+    assert client.delete(f"/api/v1/seasons/{season_id}", headers=admin_auth).status_code == 204
+    assert client.delete(f"/api/v1/shows/{show_id}", headers=auth).status_code == 403
+    assert client.delete(f"/api/v1/shows/{show_id}", headers=admin_auth).status_code == 204
 
 
 def test_reference_and_publish_validation(cms_client):

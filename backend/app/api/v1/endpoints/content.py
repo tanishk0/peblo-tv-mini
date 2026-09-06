@@ -6,7 +6,7 @@ from sqlalchemy import func
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
-from app.api.deps import get_db, require_editor
+from app.api.deps import get_db, require_admin, require_editor
 from app.models.episode import Episode
 from app.models.season import Season
 from app.models.show import Show
@@ -100,7 +100,7 @@ def update_show(show_id: int, payload: ShowUpdate, db: Session = Depends(get_db)
 
 
 @shows_router.delete("/{show_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_show(show_id: int, db: Session = Depends(get_db), _=Depends(require_editor)):
+def delete_show(show_id: int, db: Session = Depends(get_db), _=Depends(require_admin)):
     show = db.get(Show, show_id)
     if not show:
         raise not_found("Show")
@@ -146,7 +146,7 @@ def update_season(season_id: int, payload: SeasonUpdate, db: Session = Depends(g
 
 
 @seasons_router.delete("/seasons/{season_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_season(season_id: int, db: Session = Depends(get_db), _=Depends(require_editor)):
+def delete_season(season_id: int, db: Session = Depends(get_db), _=Depends(require_admin)):
     season = db.get(Season, season_id)
     if not season:
         raise not_found("Season")
@@ -202,7 +202,7 @@ def update_episode(episode_id: str, payload: EpisodeUpdate, db: Session = Depend
 
 
 @episodes_router.delete("/{episode_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_episode(episode_id: str, db: Session = Depends(get_db), _=Depends(require_editor)):
+def delete_episode(episode_id: str, db: Session = Depends(get_db), _=Depends(require_admin)):
     episode = db.get(Episode, episode_id)
     if not episode:
         raise not_found("Episode")
