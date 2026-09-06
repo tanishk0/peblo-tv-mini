@@ -47,6 +47,7 @@ class Settings(BaseSettings):
     LOCAL_ARTWORK_STORAGE_DIR: str = "storage/artwork"
     LOCAL_ARTWORK_URL_PREFIX: str = "/media/artwork"
     LOCAL_CATALOGUE_STORAGE_DIR: str = "storage/catalogues"
+    SEED_ASSETS_DIR: str = str(Path(__file__).resolve().parents[3] / "assets")
 
     @property
     def local_artwork_storage_path(self) -> Path:
@@ -61,6 +62,10 @@ class Settings(BaseSettings):
         if path.is_absolute():
             return path
         return Path(__file__).resolve().parents[2] / path
+
+    @property
+    def seed_assets_path(self) -> Path:
+        return Path(self.SEED_ASSETS_DIR)
 
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:

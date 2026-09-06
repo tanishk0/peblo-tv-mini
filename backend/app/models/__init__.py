@@ -11,6 +11,7 @@ from app.models.season import Season
 from app.models.episode import Episode
 from app.models.artwork import Artwork
 from app.models.publish_run import PublishRun
+from app.models.seed_import_issue import SeedImportIssue
 
 __all__ = [
     "UserRole",
@@ -23,4 +24,5 @@ __all__ = [
     "Episode",
     "Artwork",
     "PublishRun",
+    "SeedImportIssue",
 ]
